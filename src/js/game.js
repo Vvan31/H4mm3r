@@ -1,4 +1,4 @@
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+/* import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; */
 
 
  let renderer = null, scene = null, camera = null
