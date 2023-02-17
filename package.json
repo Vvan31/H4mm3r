@@ -1,0 +1,27 @@
+{
+  "name": "h4mm3r",
+  "version": "1.0.0",
+  "description": "Game",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vvan31/H4mm3r.git"
+  },
+  "keywords": [
+    "shark",
+    "game"
+  ],
+  "author": "Vivian",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vvan31/H4mm3r/issues"
+  },
+  "homepage": "https://github.com/Vvan31/H4mm3r#readme",
+  "dependencies": {
+    "gl-matrix": "^3.4.3",
+    "three": "^0.149.0"
+  }
+}
