@@ -1,13 +1,13 @@
-/* import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; */
-
-
+import * as THREE from 'three';
+import { GLTFLoader } from '../../node_modules/three/src/loaders/GLTFLoader.js';
  let renderer = null, scene = null, camera = null
 
 function main() {
     console.log("Hello");
     const canvas = document.getElementById("webglcanvas");
     createScene(canvas);
-    addCube();
+    loadModel()
+    //addCube();
     animate();
 }
 
@@ -35,7 +35,7 @@ function animate() {
 function loadModel(){
     const loader = new GLTFLoader();
 
-    loader.load( 'path/to/model.glb', function ( gltf ) {
+    loader.load( "../media/hammerhead.glb", function ( gltf ) {
 
         scene.add( gltf.scene );
 
@@ -46,9 +46,8 @@ function loadModel(){
     } );
 }
 
-window.onload = () => {
+/* window.onload = () => {
     main();
     animate()
-}; 
-
-animate()
+};  */
+main();
