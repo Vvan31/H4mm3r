@@ -1,67 +1,86 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-// Scene: The scene is where all the 3D objects will be displayed.
-const scene = new THREE.Scene();
+let scene, camera, renderer; 
 
-// Camara:  The camera determines what part of the scene is visible.
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+async function main(){
+  createScene();
+  addLights();
+    let shark_mixer, ray_mixer, water_mixer = await load3DObjects();
+    console.log("mixer::::");
+    console.log(shark_mixer);
+    console.log("::::mixer");
 
-// Render: The renderer is responsible for rendering the scene and displaying it on the screen.
-const canvas = document.querySelector('.webgl');
-const renderer = new THREE.WebGLRenderer({ canvas });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+    animate(shark_mixer, ray_mixer, water_mixer);
+}
+function createScene(){
+  // Scene: The scene is where all the 3D objects will be displayed.
+  scene = new THREE.Scene();
 
-// Light
-const light = new THREE.AmbientLight( 0xffffff ); // soft white light
+  // Camera:  The camera determines what part of the scene is visible.
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-light.position.set(0,0,0);
-light.intensity = 5;
-scene.add( light ); 
+  // Render: The renderer is responsible for rendering the scene and displaying it on the screen.
+  const canvas = document.querySelector('.webgl');
+  renderer = new THREE.WebGLRenderer({ canvas });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+}
 
-var dirLight = new THREE.DirectionalLight( 0xffffff , 0.5);
-dirLight.position.set( 75, 5, -60 );
-scene.add( dirLight );
- 
-// Load a 3D object
-const loader = new GLTFLoader();
-const shark = await loader.loadAsync("media/hammerhead.glb");
-  shark.scene.rotation.x = 3.8;
-/*   shark.scene.rotation.x = 3.8; */
-/*   shark.scene.rotation.y = 1;
-  shark.scene.position.y = 40; */
-  shark.scene.position.z = -65;
-  shark.scene.scale.set(-10,-10,-10); 
-  //animate shark
-  const mixer = new THREE.AnimationMixer( shark.scene );
-  const clips = shark.animations;
+function addLights(){
+  const light = new THREE.AmbientLight( 0xffffff ); // soft white light
+  light.position.set(0,0,0);
+  light.intensity = 5;
+  scene.add( light ); 
+  
+  const dirLight = new THREE.DirectionalLight( 0xffffff , 0.5);
+  dirLight.position.set( 75, 5, -60 );
+  scene.add( dirLight );
+}
+
+async function load3DObjects(){
+  const loader = new GLTFLoader();
+  // loader --- Path ---- rotation: x, y, z --- position: x, y, z ---- scale. 
+  let shark = await loadModel(loader, "media/hammerhead.glb", 3.8, 0, 0, 0, 0, -65,-10,-10,-10);
+  let ray = await loadModel(loader, "media/manta.glb", 3.8, 0, 0, 30, 0, -65,-10,-10,-10);
+  let water = await loadModel(loader, "media/water_animation.glb", 0.8, 0, 0, 0, 0, -63,4,8,5);
+  setTimeout(20000)
+  const shark_mixer = setTimeout(animateModel(shark, 'Action'), 900000);
+  const ray_mixer = setTimeout(animateModel(ray, 'swim'), 900000);
+  const water_mixer = setTimeout(animateModel(water, 'Take 001'), 90000);
+
+  changeWaterMesh(water);
 
   scene.add(shark.scene);
+  scene.add(water.scene);
+  scene.add(ray.scene);
 
-//animate swim
-const clip = THREE.AnimationClip.findByName( clips, 'Action' );
-const action = mixer.clipAction( clip );
-action.play();
- 
-//Load Water Object
-const water = await loader.loadAsync("media/water_animation.glb");
-/*  water.scene.rotation.y = 5; */
-water.scene.rotation.x = 0.8;
-water.scene.scale.set(4,8,5); 
+  return shark_mixer, ray_mixer, water_mixer;
+ }
 
- water.scene.position.z = -63;
-  //animate WATER
-  const mixer_water = new THREE.AnimationMixer( water.scene );
-  const clips_water = water.animations;
+ async function loadModel(loader, path, rot_x, rot_y, rot_z, pos_x, pos_y, pos_z, sc1,sc2, sc3){
+  const model = await loader.loadAsync(path);
+  model.scene.rotation.x = rot_x;
+  model.scene.rotation.y = rot_y;
+  model.scene.rotation.z = rot_z;
+  model.scene.position.x = pos_x;
+  model.scene.position.y = pos_y;
+  model.scene.position.z = pos_z;
+  model.scene.scale.set(sc1, sc2, sc3); 
+  return model; 
+}
 
-  scene.add(water.scene); 
-
-
+function animateModel(model, actionName){
+  const mixer = new THREE.AnimationMixer( model.scene );
+  const clips = model.animations;
+  const clip = THREE.AnimationClip.findByName( clips, actionName);
+  const action = mixer.clipAction( clip );
+  action.play(); 
+  return mixer;
+}
+function changeWaterMesh(water){
   let meshes = water.parser.associations.keys();
-  console.log(water); 
   for (let i = 0; i <= 15; i++) {
-    console.log(meshes.next().value); 
     const material = meshes.next().value;
     if (material) {
       material['transparent']  = true;
@@ -70,22 +89,18 @@ water.scene.scale.set(4,8,5);
       material['color'] = (47,79,79);
     }
   }
-  //animate WATER MOVEMENT 
-const clip_water = THREE.AnimationClip.findByName( clips_water, 'Take 001' );
-const action_water = mixer_water.clipAction( clip_water );
-action_water.play();
-
-
+}
 
 //Render the scene: This will display the 3D object on the screen.
-function animate() {
+function animate(shark_mixer, ray_mixer, water_mixer) {
    // animate model
-    mixer.update( 0.015 );
-    mixer_water.update( 0.0005 );
+   shark_mixer.update( 0.015 );
+   ray_mixer.update( 0.015 );
+   water_mixer.update( 0.0005 ); 
   
   requestAnimationFrame(animate);
   renderer.setClearColor( 0xffffff, 0);
   renderer.render(scene, camera);
- 
 }
-animate();
+main();
+/* animate(); */
